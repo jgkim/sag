@@ -92,7 +92,7 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
       $response->body = '';
 
       // split headers and body
-      list($continue, $headers, $response->body) = explode("\r\n\r\n", $chResponse);
+      @list($continue, $headers, $response->body) = explode("\r\n\r\n", $chResponse);
 
       /*
        * It doesn't always happen, but it seems that we will sometimes get a

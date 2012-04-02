@@ -130,12 +130,12 @@ class Sag {
     }
 
     // restore previous decode value, if any
-    if(is_bool($prevDecode)) {
+    if(isset($prevDecode) && is_bool($prevDecode)) {
       $this->httpAdapter->decodeResp = $prevDecode;
     }
 
     // restore previous timeout vlaues, if any
-    if(is_array($prevTimeouts)) {
+    if(isset($prevTimeouts) && is_array($prevTimeouts)) {
       $this->httpAdapter->setTimeoutsFromArray($prevTimeouts);
     }
 
@@ -276,7 +276,7 @@ class Sag {
      * Not caching, or we are caching but there's nothing cached yet, or our
      * cached item is no longer good.
      */
-    if(!$response) {
+    if(!isset($response)) {
       $response = $this->procPacket('GET', $url);
     }
 
@@ -1086,7 +1086,7 @@ class Sag {
      * Checking this again because $headers['Cookie'] could be set in two
      * different logic paths above.
      */
-    if($headers['Cookie']) {
+    if(isset($headers['Cookie']) && $headers['Cookie']) {
       $buff = '';
 
       foreach($headers['Cookie'] as $k => $v) {
