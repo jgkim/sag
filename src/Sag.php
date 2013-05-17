@@ -15,14 +15,13 @@
 
 require_once('SagException.php');
 require_once('SagCouchException.php');
-require_once('SagConfigurationCheck.php');
 require_once('httpAdapters/SagNativeHTTPAdapter.php');
 require_once('httpAdapters/SagCURLHTTPAdapter.php');
 
 /**
  * The Sag class provides the core functionality for talking to CouchDB.
  *
- * @version 0.7.1
+ * @version 0.8.0
  * @package Core
  */
 class Sag {
@@ -80,8 +79,6 @@ class Sag {
    */
   public function __construct($host = "127.0.0.1", $port = "5984")
   {
-    SagConfigurationCheck::run();
-
     $this->host = $host;
     $this->port = $port;
 
@@ -101,7 +98,7 @@ class Sag {
    */
   public function setHTTPAdapter($type = null) {
     if(!$type) {
-      $type = self::$HTTP_NATIVE_SOCKETS;
+      $type = extension_loaded("curl") ? self::$HTTP_CURL : self::$HTTP_NATIVE_SOCKETS;
     }
 
     // nothing to be done
@@ -260,10 +257,13 @@ class Sag {
       $prevResponse = $this->cache->get($url);
 
       if($prevResponse) {
-        $response = $this->procPacket('GET', $url, null, array('If-None-Match' => $prevResponse->headers->Etag));
+        $response = $this->procPacket('GET', $url, null, array('If-None-Match' => $prevResponse->headers->etag));
 
         if($response->headers->_HTTP->status == 304) {
-          return $prevResponse; //cache hit
+          //cache hit
+          $response->fromCache = true;
+
+          return $prevResponse;
         }
       
         $this->cache->remove($url); 
@@ -1049,12 +1049,24 @@ class Sag {
       $url = $this->pathPrefix . $url;
     }
 
+    // Filter the use of the Expect header since we don't support Continue headers.
+    if(strtolower($headers['expect']) === '100-continue' || strtolower($headers['Expect']) === '100-continue') {
+      throw new SagException('Sag does not support HTTP/1.1\'s Continue.');
+    }
+    else if(!$headers['expect'] && !$headers['Expect']) {
+      /*
+       * PHP cURL will set the Expect header to 100-continue if we don't set it
+       * ourselves. See https://github.com/sbisbee/sag/pull/51
+       */
+      $headers['Expect'] = ' '; //1 char string, so it's == to true
+    }
+
     // Do some string replacing for HTTP sanity.
     $url = str_replace(array(" ", "\""), array('%20', '%22'), $url);
 
     // Build the request packet.
     $headers["Host"] = "{$this->host}:{$this->port}";
-    $headers["User-Agent"] = "Sag/0.7.1";
+    $headers["User-Agent"] = "Sag/0.8.0";
 
     /*
      * This prevents some unRESTful requests, such as inline attachments in

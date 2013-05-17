@@ -1,7 +1,7 @@
 Sag
 ===
 
-Version 0.7.1
+Version 0.8.0
 http://www.saggingcouch.com
 
 Sag is a PHP library for working with CouchDB. It is designed to not force any
@@ -13,12 +13,19 @@ Sag to incorporate new CouchDB functionality.
 Compatability
 -------------
 
-Each Sag release is tested with an automated testing suite against CouchDB
-1.0.x and 1.1.x, and PHP 5.3.x. Lower versions of CouchDB 0.11.x and 0.10.x,
-and PHP 5.2.x will likely work with Sag, but they are not officially supported,
-so your mileage may vary.
+Each Sag release is tested with an automated testing suite against all the
+combinations of:
 
-If you are running pre-1.0.1 CouchDB or pre-5.3 PHP, then you probably want to
+  - PHP 5.3.x
+
+  - CouchDB 1.2.x
+
+  - Cloudant
+
+Lower versions of CouchDB (0.11.x, 1.0.x, and 1.1.x) and PHP 5.2.x will likely
+work with Sag, but they are not officially supported, so your mileage may vary.
+
+If you are running pre-1.2.x CouchDB or pre-5.3 PHP, then you probably want to
 look into updating your environment.
 
 Contents
@@ -61,11 +68,6 @@ src/SagMemoryCache.php          Caching mechanism that uses PHP objects in
                                 semi-accurate, but are less important than file
                                 caching.
 
-src/SagConfigurationCheck.php   A bootstrap file that Sag uses to make sure the
-                                environment will work with Sag. There is no
-                                reason you would need to call this directly,
-                                unless writing your own bootstrap scripts.
-
 src/SagUserUtils.php            A set of utilities for interacting with CouchDB
                                 users and the _users database.
 
@@ -78,7 +80,7 @@ Error Handling
 
 Sag's paradigm of simplicity is carried into its error handling by allowing you
 to send data to CouchDB that will result in errors (ex., malformed JSON). This
-is because CouchDB knows when there iss an error better than Sag. This also
+is because CouchDB knows when there is an error better than Sag. This also
 makes Sag more future proof, instead of worrying about each of CouchDB's API
 changes. Therefore, Sag will only look for PHP interface problems and issues
 that are native to PHP, such as passing an int instead of a stdClass.

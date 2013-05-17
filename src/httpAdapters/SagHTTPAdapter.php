@@ -4,7 +4,7 @@
  * allowing for different drivers to be used thereby controling your project's
  * dependencies.
  *
- * @version 0.7.1
+ * @version 0.8.0
  * @package HTTP
  */
 abstract class SagHTTPAdapter {
@@ -37,8 +37,8 @@ abstract class SagHTTPAdapter {
     //Make sure we got the complete response.
     if(
       $method != 'HEAD' &&
-      isset($response->headers->{'Content-Length'}) &&
-      strlen($response->body) != $response->headers->{'Content-Length'}
+      isset($response->headers->{'content-length'}) &&
+      strlen($response->body) != $response->headers->{'content-length'}
     ) {
       throw new SagException('Unexpected end of packet.');
     }

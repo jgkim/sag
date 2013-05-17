@@ -43,7 +43,8 @@ TESTS_CONFIG_NATIVE_SOCKETS := ${TESTS_DIR}/phpunitConfig-nativeSockets.xml
 TESTS_CONFIG_CURL := ${TESTS_DIR}/phpunitConfig-cURL.xml
 TESTS_CONFIG_SSL_CURL := ${TESTS_DIR}/phpunitConfig-SSL-cURL.xml
 
-TESTS_PHPUNIT_OPTS_BASE := -d "include_path=${TESTS_PHP_INCLUDE_PATH}"
+TESTS_PHPUNIT_OPTS_BASE := -d "include_path=${TESTS_PHP_INCLUDE_PATH}" \
+                            -d "error_reporting=\"E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_ERROR|E_CORE_ERROR\""
 
 TESTS_PHPUNIT_OPTS_NATIVE := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TESTS_CONFIG_NATIVE_SOCKETS}
 TESTS_PHPUNIT_OPTS_CURL := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TESTS_CONFIG_CURL}
@@ -51,7 +52,7 @@ TESTS_PHPUNIT_OPTS_SSL_CURL := ${TESTS_PHPUNIT_OPTS_BASE} --configuration=${TEST
 
 # PHPDocs related tools and files
 DOCS_DIR := ${PREFIX}docs
-PHPDOC_OPTS := -d ${SRC_DIR} -t ${DOCS_DIR} -o HTML:Smarty:PHP -dn Core -ti "Sag Documentation"
+PHPDOC_OPTS := -d ${SRC_DIR} -t ${DOCS_DIR} --title "Sag Documentation" --defaultpackagename "Core" --template "abstract"
 
 # Build the distribution
 dist: clean ${DIST_DIR}
@@ -73,21 +74,21 @@ checkNative:
 	@echo "Testing with native sockets..."
 
 	${TESTS_BOOTSTRAP}
-	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_NATIVE} ${TESTS_DIR} || echo '(xxxx)====( (>_<) )====> OMG YOUR FAILING TESTS KILLED KENNY!'
+	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_NATIVE} ${TESTS_DIR}
 
 # Run tests with cURL
 checkCURL:
 	@echo "Testing with cURL..."
 
 	${TESTS_BOOTSTRAP}
-	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_CURL} ${TESTS_DIR} || echo '(xxxx)====( (>_<) )====> OMG YOUR FAILING TESTS KILLED KENNY!'
+	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_CURL} ${TESTS_DIR}
 
 # Runs tests with cURL and SSL
 checkCURL_SSL:
 	@echo "Testing with cURL + SSL..."
 
 	${TESTS_BOOTSTRAP}
-	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_SSL_CURL} ${TESTS_DIR} || echo '(xxxx)====( (>_<) )====> OMG YOUR FAILING TESTS KILLED KENNY!'
+	@${PHPUNIT} ${TESTS_PHPUNIT_OPTS_SSL_CURL} ${TESTS_DIR}
 
 # Run the tests
 check: lint checkNative checkCURL

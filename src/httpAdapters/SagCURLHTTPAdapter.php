@@ -4,7 +4,7 @@
  * you more advanced features, like SSL supports, with the cost of an
  * additional dependency that your shared hosting environment might now have. 
  *
- * @version 0.7.1
+ * @version 0.8.0
  * @package HTTP
  */
 require_once('SagHTTPAdapter.php');
@@ -30,6 +30,7 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
       CURLOPT_FOLLOWLOCATION => true,
       CURLOPT_HEADER => true,
       CURLOPT_RETURNTRANSFER => true,
+      CURLOPT_NOBODY => false,
       CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
       CURLOPT_CUSTOMREQUEST => $method
     );
@@ -92,18 +93,7 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
       $response->body = '';
 
       // split headers and body
-      @list($continue, $headers, $response->body) = explode("\r\n\r\n", $chResponse);
-
-      /*
-       * It doesn't always happen, but it seems that we will sometimes get a
-       * Continue header that will screw parsing up.
-       */
-      if(!$response->body) {
-        $response->body = $headers;
-        $headers = $continue;
-      }
-
-      unset($continue);
+      @list($headers, $response->body) = explode("\r\n\r\n", $chResponse);
 
       // split up the headers
       $headers = explode("\r\n", $headers);
@@ -121,6 +111,7 @@ class SagCURLHTTPAdapter extends SagHTTPAdapter {
         }
         else {
           $line = explode(':', $headers[$i], 2);
+          $line[0] = strtolower($line[0]);
           $response->headers->$line[0] = ltrim($line[1]);
 
           if($line[0] == 'Set-Cookie') {

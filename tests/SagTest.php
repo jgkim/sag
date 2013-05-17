@@ -15,7 +15,6 @@
 
 // See the README in tests/ for information on running and writing these tests.
 
-require_once('PHPUnit/Framework.php');
 require_once('Sag.php');
 require_once('SagFileCache.php');
 require_once('SagMemoryCache.php');
@@ -35,13 +34,13 @@ class SagTest extends PHPUnit_Framework_TestCase
 
   public function setUp()
   {
-    $this->couchIP = ($GLOBALS['host']) ?: '127.0.0.1';
-    $this->couchPort = ($GLOBALS['port']) ?: '5984';
-    $this->couchDBName = ($GLOBALS['db']) ?: 'sag_tests';
-    $this->couchAdminName = ($GLOBALS['adminName']) ?: 'admin';
-    $this->couchAdminPass = ($GLOBALS['adminPass']) ?: 'passwd';
+    $this->couchIP = ($GLOBALS['host']) ? $GLOBALS['host'] : '127.0.0.1';
+    $this->couchPort = ($GLOBALS['port']) ? $GLOBALS['port'] : '5984';
+    $this->couchDBName = ($GLOBALS['db']) ? $GLOBALS['db'] : 'sag_tests';
+    $this->couchAdminName = ($GLOBALS['adminName']) ? $GLOBALS['adminName'] : 'admin';
+    $this->couchAdminPass = ($GLOBALS['adminPass']) ? $GLOBALS['adminPass'] : 'passwd';
     $this->couchHTTPAdapter = $GLOBALS['httpAdapter'];
-    $this->couchSSL = ($GLOBALS['ssl']) ?: false;
+    $this->couchSSL = ($GLOBALS['ssl']) ? $GLOBALS['ssl'] : false;
 
     $this->couch = new Sag($this->couchIP, $this->couchPort);
     $this->couch->setHTTPAdapter($this->couchHTTPAdapter);
@@ -117,6 +116,26 @@ class SagTest extends PHPUnit_Framework_TestCase
     {
       $this->assertTrue(true);
     }
+  }
+
+  public function test_twoPosts() {
+    $docs = array(
+      array("one" => "bwah"),
+      array("two" => "bwah")
+    );
+
+    $this->assertTrue($this->couch->post($docs[0])->body->ok);
+
+    $resp = $this->couch->post($docs[1]);
+    $this->assertTrue($resp->body->ok);
+
+    /*
+     * Make sure the fields didn't get appended:
+     * http://uk3.php.net/manual/en/function.curl-setopt-array.php#104369
+     */
+    $resp = $this->couch->get($resp->body->id);
+    $this->assertEquals($resp->body->two, $docs[1]['two']);
+    $this->assertNotEquals($resp->body->one, $docs[0]['one']);
   }
 
   public function test_getID()
@@ -204,7 +223,7 @@ class SagTest extends PHPUnit_Framework_TestCase
     $doc->foo = 'foo';
 
     //...send it...
-    $this->assertTrue($this->couch->post($doc)->body->ok);
+    $this->assertTrue($this->couch->put($doc->_id, $doc)->body->ok);
 
     //...and get it again
     $this->assertEquals($this->couch->get('/1')->body->foo, 'foo');
@@ -218,7 +237,7 @@ class SagTest extends PHPUnit_Framework_TestCase
     $this->assertTrue(isset($resDefaults->body->rows[0]->value));
     $this->assertFalse(isset($resDefaults->body->rows[0]->doc));
 
-    $resDescending = $this->couch->getAllDocs(true, null, '[]', '""', null, true);
+    $resDescending = $this->couch->getAllDocs(true, null, '{}', '1', null, true);
     $this->assertEquals('1', end($resDescending->body->rows)->id);
 
     try {
@@ -327,7 +346,7 @@ class SagTest extends PHPUnit_Framework_TestCase
 
   public function test_replication()
   {
-    $newDB = ($GLOBALS['dbReplication']) ?: 'sag_tests_replication';
+    $newDB = ($GLOBALS['dbReplication']) ? $GLOBALS['dbReplication'] : 'sag_tests_replication';
 
     // Basic
     $this->assertFalse(in_array($newDB, $this->couch->getAllDatabases()->body));
@@ -531,11 +550,13 @@ class SagTest extends PHPUnit_Framework_TestCase
 
     $id = $this->couch->post($doc)->body->id;
     
-    //doc creation is not cached
+    //doc creation with POST is not cached (vs PUT)
     $cFileName = $cache->makeFilename("/{$this->couch->currentDatabase()}/$id");
     $this->assertFalse(is_file($cFileName));
 
+    //get the file, putting it in the cache
     $fromDB = $this->couch->get("/$id");
+    $this->assertEquals($fromDB->headers->_HTTP->status, 200);
 
     //should now be cached
     $this->assertTrue(is_file($cFileName));
@@ -883,5 +904,4 @@ class SagTest extends PHPUnit_Framework_TestCase
       $this->assertTrue(true);
     }
   }
-
 }
